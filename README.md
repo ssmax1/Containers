@@ -1,68 +1,68 @@
-# Containers
+# RStudio Containers
 
-This repository contains Singularity/Apptainer container recipes and build logs for reproducible R environments, including an RStudio Server image.
+This repository contains **Singularity/Apptainer** recipes and automation scripts for reproducible R environments. These are specifically designed for High-Performance Computing (HPC) clusters using the SLURM workload manager.
 
-Overview
+---
 
-The goal of this project is to provide portable, reproducible containers for R and RStudio Server that can be deployed on HPC systems or local machines. Each container is defined by a .recipe file and built into a .sif/.simg image.
+## Overview
 
-Repository Structure
+The goal of this project is to provide portable R and RStudio Server environments. 
+* **Containers:** Defined by `.recipe` files and built into `.simg` or `.sif` images.
+* **Automation:** A SLURM script is provided to handle port mapping, directory binding, and secure session launching.
 
-Containers/
-├── Rserver4.4.recipe        # Singularity/Apptainer build recipe
-├── Rserver4.4.simg.log      # Build log (optional)
+---
+
+## Repository Structure
+
+```text
+.
+├── Containers/
+│   ├── Rserver4.4.recipe      # Singularity/Apptainer build recipe
+│   └── Rserver4.4.simg.log    # Build log for auditing
+├── slurm_start_rstudio_4.4.sh # SLURM launch script for HPC nodes
 └── README.md
+```
+## Building the Container
+Building requires root privileges. If you are on an HPC, you may need to build this on a local Linux machine or a dedicated build node.
 
-Building the Container
-
-You can build the RStudio Server container using Singularity or Apptainer. This requires root privileges (or an unprivileged build environment configured by your HPC admins).
-
-Build Command
-
+```text
 sudo singularity build Rserver4.4.simg Rserver4.4.recipe 2>&1 | tee Rserver4.4.simg.log
+```
 
-This will:
+## Launching on HPC (SLURM)
+The provided slurm_start_rstudio_4.4.sh script automates the process of requesting resources and starting the RStudio Server.
 
-Compile the container from the recipe
+1. Configure the Script
+Before submitting, edit the following variables in slurm_start_rstudio_4.4.sh:
 
-Output the build log to Rserver4.4.simg.log
+#SBATCH --mem=16G: Adjust memory as needed.
 
-Produce the final image Rserver4.4.simg
+PASSWORD="your_password": Set your RStudio login password.
 
-If using Apptainer, the command is identical:
+RSHOME="/path/to/user/rstudio_session_1": Set your persistent working directory.
 
-sudo apptainer build Rserver4.4.sif Rserver4.4.recipe
+2. Submit the Job
+sbatch slurm_start_rstudio_4.4.sh
 
-Using the Container
+3. Connect to the Session
+Once the job starts, check the output log (rslog-<jobID>.log). It will provide a custom SSH Tunnel command. Run that command on your local terminal:
 
-Once built, you can run the image directly:
+Example of the generated command:
+ssh -N -L 8788:localhost:8788 user@hpc-node-01.internal
 
-singularity exec Rserver4.4.simg R --version
+Manual Execution (Alternative)
+If you aren't using SLURM, you can run the image directly:
 
-Or start an interactive shell:
-
+Interactive Shell:
 singularity shell Rserver4.4.simg
 
-Running RStudio Server (Example)
+Manual Rstudio Launch:
+singularity exec --bind /path/to/home:/home/rstudio Rserver4.4.simg rserver --www-port=8788 --auth-none=0
 
-If you want to run RStudio Server inside the container, bind the necessary directories and launch rserver:
+## 📝 Important Notes
+Port Collisions: The SLURM script includes a get_port function that automatically finds an available port if 8788 is in use.
 
-singularity exec 
-    --bind /path/to/home:/home/rstudio 
-    --bind /path/to/tmp:/tmp 
-    Rserver4.4.simg 
-    rserver --www-port=8788 --auth-none=0
+Persistence: The script creates isolated directories for .local, .rstudio, and tmp to prevent session conflicts between different container versions.
 
-Then open your browser at:
+Binding: Ensure any external data drives are correctly mapped in the singularity exec section of the script.
 
-http://localhost:8788
-
-(You may need an SSH tunnel if running on a remote HPC node.)
-
-Notes
-
-You may need to adjust bind paths depending on your HPC environment.
-
-If your cluster uses Apptainer instead of Singularity, commands are interchangeable.
-
-For multi-user environments, ensure you configure authentication appropriately.
