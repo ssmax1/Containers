@@ -90,16 +90,13 @@ LOCALPORT=${PORT}
 PUBLIC_IP=$(curl https://checkip.amazonaws.com)
 
 echo "On you local machine, open an SSH tunnel like:"
-# echo "  ssh -N -L ${LOCALPORT}:localhost:${PORT} ${USER}@m3-bio1.erc.monash.edu.au"
+# echo "  ssh -N -L ${LOCALPORT}:localhost:${PORT} ${USER}@hostname.edu.au"
 echo "  ssh -N -L ${LOCALPORT}:localhost:${PORT} ${USER}@$(hostname -f)"
 echo "  or"
 echo "  ssh -N -L ${LOCALPORT}:localhost:${PORT} ${USER}@${PUBLIC_IP}"
-echo "	ssh -N -J ${USER}@bakerhpc.bhri.internal -L ${PORT}:localhost:${PORT} ${USER}@$(hostname -f)"
-echo "	$(hostname -f).bhri.internal:${PORT} "
-echo "	$(hostname -f).bhri.internal:${PORT} " > /home/$USER/rstudio.job.port
-
-# For smux/srun/sbatch jobs, route via the login node to a the compute node where rserver runs - not working for me
-# echo "  ssh -N -L ${LOCALPORT}:${HOSTNAME}:${PORT} ${USER}@m3.massive.org.au"
+echo "	ssh -N -J ${USER}@host.internal -L ${PORT}:localhost:${PORT} ${USER}@$(hostname -f)"
+echo "	$(hostname -f)host.internal:${PORT} "
+echo "	$(hostname -f)host.internal:${PORT} " > /home/$USER/rstudio.job.port
 echo
 echo "Point your web browser at http://localhost:${LOCALPORT}"
 echo
