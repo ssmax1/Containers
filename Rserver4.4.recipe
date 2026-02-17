@@ -1,0 +1,208 @@
+Bootstrap: docker
+From:      rocker/verse:4.4
+
+%labels
+    MAINTAINER_NAME  scott maxwell
+    MAINTAINER_EMAIL scott.maxwell@baker.edu.au
+
+%post
+
+    echo "*********************************************************"
+    echo "Version"
+    lsb_release -a
+    echo "Install repositories"
+    echo "*********************************************************"
+    
+    apt-get update && \
+    apt-get install --yes \
+            build-essential git \
+            libhdf5-dev libcurl4-openssl-dev libssl-dev libpng-dev libboost-all-dev libbz2-dev\
+            libxml2-dev openjdk-8-jdk python3.10-dev python3-pip wget git libfftw3-dev libgsl-dev \
+            libglpk40 libglpk-dev  liblzma-dev hdf5-tools libudunits2-dev libgdal-dev libgeos-dev \
+            libproj-dev libmysqlclient-dev libncurses-dev libglu1-mesa libglu1 libglpk-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+cd /opt && \
+apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    wget https://repo.anaconda.com/miniconda/Miniconda3-py310_23.5.2-0-Linux-x86_64.sh && \
+    chmod +x Miniconda3-py310_23.5.2-0-Linux-x86_64.sh && \
+    ./Miniconda3-py310_23.5.2-0-Linux-x86_64.sh -b -p /opt/miniconda3 && \
+    ln -s /opt/miniconda3/bin/conda /usr/bin/conda && \
+    chmod --recursive a+rw /opt/miniconda3 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm ./Miniconda3-py310_23.5.2-0-Linux-x86_64.sh && \
+    conda init --system --all
+
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda install -y -c bioconda ucsc-bedclip
+conda install -y -c bioconda ucsc-bedgraphtobigwig
+conda --version
+#conda install -y deeptools
+
+# Install / upgrade python apps
+python3 -m pip install --upgrade pip setuptools scvelo Cython wheel
+ 
+    pip3 install numpy
+    pip3 install umap-learn
+    pip3 install multiqc
+    pip3 install scikit-learn
+    pip3 install requests pandas matplotlib biopython 
+    pip3 install statsmodels
+    pip3 install deap
+    pip3 install deepTools
+    pip3 install scikit-bio 
+    pip3 install plotly 
+    pip3 install ete3 
+    pip3 install scipy 
+    pip3 install xarray
+    pip3 install xgboost
+    pip3 install numba
+    pip3 install macs3
+          
+    # Misc Apps
+    apt-get update && apt-get install -yq --no-install-recommends \
+    gedit\
+    htop\
+    tmux\
+    screen\
+    magic-wormhole\
+    ncftp\
+    curlftpfs\
+    lftp\
+    fastp\
+    git\
+    parallel\
+    gdebi-core\
+    pigz\
+    texlive-base\
+    texlive\
+    texlive-latex-recommended\
+    texlive-latex-extra\
+    texlive-xetex
+
+
+
+#INSTALL MACS3 - temp fix for cython build error
+#cd /opt
+#git clone --recurse-submodules https://github.com/macs3-project/MACS.git
+#cd /opt/MACS
+#git checkout hmmratac_add_training_command
+#pip install .
+cd /opt
+
+#INSTALL unibind
+cd /opt
+git clone https://bitbucket.org/CBGR/unibind_enrichment.git
+cd unibind_enrichment
+./deploy.sh -p commandline
+
+#UPDATE RSTUDIO IF NEEDED
+#cd /opt
+#wget https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2023.06.2-561-amd64.deb
+#gdebi -n rstudio-server-2023.06.2-561-amd64.deb
+
+#Install BWA
+apt-get install -yq bwa bowtie2
+
+# Install FastQC
+cd /opt
+wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
+    unzip /opt/fastqc_v0.12.1.zip && \
+    chmod 755 /opt/FastQC/fastqc && \
+    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc
+  #  rm /opt/fastqc_v0.11.9.zip
+
+# Install Kallisto
+cd /opt
+wget https://github.com/pachterlab/kallisto/releases/download/v0.50.0/kallisto_linux-v0.50.0.tar.gz && \
+    tar xvzf /opt/kallisto_linux-v0.50.0.tar.gz && \
+    ln -s /opt/kallisto_linux-v0.50.0/kallisto /usr/local/bin/kallisto
+   # rm /opt/kallisto_linux-v0.50.0.tar.gz
+
+# Install bwa-mem2
+cd /opt
+wget https://github.com/bwa-mem2/bwa-mem2/releases/download/v2.2.1/bwa-mem2-2.2.1_x64-linux.tar.bz2 && \
+    tar jxf /opt/bwa-mem2-2.2.1_x64-linux.tar.bz2 && \
+    ln -s /opt/bwa-mem2-2.2.1_x64-linux/bwa-mem2* /usr/local/bin/
+    #rm /opt/bwa-mem2-2.2.1_x64-linux.tar.bz2    
+
+# Install STAR
+cd /opt
+git clone https://github.com/alexdobin/STAR.git /opt/STAR && \
+    ln -s /opt/STAR/bin/Linux_x86_64/STAR /usr/local/bin/STAR && \
+    ln -s /opt/STAR/bin/Linux_x86_64/STARlong /usr/local/bin/STARlong
+
+# Install SAMTools
+cd /opt
+wget https://github.com/samtools/samtools/releases/download/1.17/samtools-1.17.tar.bz2 && \
+    tar xvjf /opt/samtools-1.17.tar.bz2 && \
+    cd /opt/samtools-1.17 && \
+    make && \
+    make install
+    #rm /opt/samtools-1.17.tar.bz2
+
+# Install featureCounts 
+cd /opt
+wget https://sourceforge.net/projects/subread/files/subread-2.0.6/subread-2.0.6-Linux-x86_64.tar.gz/download -O /opt/subread-2.0.6-Linux-x86_64.tar.gz && \
+    tar xvzf /opt/subread-2.0.6-Linux-x86_64.tar.gz && \
+    ln -s /opt/subread-2.0.6-Linux-x86_64/bin/featureCounts /usr/local/bin/featureCounts
+    #rm /opt/subread-2.0.6-Linux-x86_64.tar.gz
+
+# Install cutadapt and MAGIC and awscli (to download data)
+pip3 install cutadapt magic-impute awscli
+
+# Install TrimGalore
+cd /opt
+wget https://github.com/FelixKrueger/TrimGalore/archive/refs/tags/0.6.10.tar.gz -O /opt/trim_galore_v0.6.10.tar.gz && \
+    tar xvzf /opt/trim_galore_v0.6.10.tar.gz && \
+    ln -s /opt/TrimGalore-0.6.10/trim_galore /usr/local/bin/trim_galore
+    #rm /opt/TrimGalore/trim_galore_v0.6.10.tar.gz
+
+# Install bedtools2 (dependency;python (python2) not included in standard ubuntu20.4 repo, add repo above- "add-apt-repository universe" for UB20.4, not needed in 2.31 UB22.04)
+cd /opt
+wget https://github.com/arq5x/bedtools2/releases/download/v2.31.0/bedtools-2.31.0.tar.gz -O /opt/bedtools-2.31.0.tar.gz && \
+    tar xvzf /opt/bedtools-2.31.0.tar.gz && \
+    cd /opt/bedtools2 && \
+    make && \
+    cd - && \
+    cp /opt/bedtools2/bin/* /usr/local/bin
+    #rm /opt/bedtools-2.31.0.tar.gz
+
+# Install Skewer
+  cd /opt
+  wget -c https://downloads.sourceforge.net/project/skewer/Binaries/skewer-0.2.2-linux-x86_64 && \
+  chmod +x skewer-0.2.2-linux-x86_64 && \
+  cp skewer-0.2.2-linux-x86_64 /usr/local/bin/skewer
+  #rm skewer-0.2.2-linux-x86_64
+  cd -
+
+
+        
+    R --no-echo --no-restore --no-save -e "install.packages('BiocManager')" && \
+    R --no-echo --no-restore --no-save -e "BiocManager::install('Rhtslib')" &&\
+    R --no-echo --no-restore --no-save -e "BiocManager::install(c('multtest', 'S4Vectors', 'SummarizedExperiment','TxDb.Hsapiens.UCSC.hg38.knownGene','org.Hs.eg.db','org.Mm.eg.db','ChIPseeker','clusterProfiler','SingleCellExperiment','MAST', 'DESeq2', 'BiocGenerics', 'GenomicRanges', 'IRanges', 'rtracklayer', 'monocle', 'Biobase', 'limma','annotatr','cowplot','ComplexHeatmap','ggpubr','ggrepel','knitr','IlluminaHumanMethylationEPICanno.ilm10b2.hg19','FDb.InfiniumMethylation.hg19','edgeR','mitch','Seurat','caret','ggbeeswarm','fgsea','circlize','rmarkdown','biomaRt','plotly','plyr','matrixStats','DESeq2','devtools','dplyr','factoextra','FactoMineR','ensembldb','checkmate','gridExtra'))" && \
+    R --no-echo --no-restore --no-save -e "install.packages(c('VGAM', 'R.utils', 'metap', 'Rfast2', 'ape', 'enrichR', 'mixtools'))" && \
+    R --no-echo --no-restore --no-save -e "install.packages('remotes')" && \
+    R --no-echo --no-restore --no-save -e "install.packages('enrichR')" && \
+    R --no-echo --no-restore --no-save -e "install.packages('renv')" && \
+    R --no-echo --no-restore --no-save -e "BiocManager::install(c('abind', 'adabag', 'alphavantager', 'anytime', 'bbmle', 'bdsmatrix',    'BH', 'Biobase', 'BiocGenerics', 'BiocIO', 'BiocManager', 'BiocParallel',    'BiocVersion', 'Biostrings', 'bitops', 'BSgenome.Hsapiens.NCBI.GRCh38',    'ChIPseqSpikeInFree', 'cli', 'coda', 'coin', 'colorspace', 'combiroc',    'ConsRank', 'cpp11', 'crayon', 'Cubist', 'DataExplorer', 'data.table',    'DelayedArray', 'dmrseq', 'dynamicTreeCut', 'emdbook', 'fansi',    'farver', 'fastcluster', 'fastseg', 'faux', 'filematrix', 'forecast',    'formatR', 'fracdiff', 'furrr', 'futile.logger', 'futile.options',    'gdsfmt', 'GenomeInfoDb', 'GenomeInfoDbData', 'GenomicAlignments',    'GenomicRanges', 'getopt', 'ggalluvial', 'ggmanh', 'ggplot2',    'ggupset', 'ggVennDiagram', 'glmnet', 'glue', 'gtable', 'gtools',    'hexbin', 'IRanges', 'isoband', 'kableExtra', 'KEGGgraph', 'kknn',    'klaR', 'labeling', 'labelled', 'lambda.r', 'latexpdf', 'libcoin',    'lifecycle', 'limma', 'LOLA', 'magrittr', 'MatrixGenerics', 'matrixStats',    'mclust', 'mda', 'methrix', 'methylKit', 'mlbench', 'modeltools',    'moments', 'munsell', 'mvtnorm', 'networkD3', 'numDeriv', 'optparse',    'outliers', 'padr', 'party', 'pathview', 'PerformanceAnalytics',    'pillar', 'pkgconfig', 'pls', 'plyr', 'plyranges', 'pracma',    'qualV', 'Quandl', 'quantmod', 'questionr', 'qvalue', 'R6', 'ramwas',    'R.cache', 'RColorBrewer', 'Rcpp', 'RcppRoll', 'RCurl', 'reshape2',    'restfulr', 'rgl', 'Rgraphviz', 'RhpcBLASctl', 'Rhtslib', 'riingo',    'rjson', 'rlang', 'rlist', 'R.methodsS3', 'rminer', 'R.oo', 'rsample',    'Rsamtools', 'RSpectra', 'rtracklayer', 'R.utils', 'S4Arrays',    'S4Vectors', 'scales', 'SeqArray', 'slider', 'snow', 'som', 'SparseArray',    'speckle', 'statmod', 'stringi', 'stringr', 'strucchange', 'styler',    'SummarizedExperiment', 'tibble', 'tidyquant', 'tiger', 'timetk',    'truncnorm', 'tseries', 'tsfeatures', 'TTR', 'umap', 'UpSetR',    'urca', 'utf8', 'vctrs', 'viridisLite', 'warp', 'WGCNA', 'withr',    'writexl', 'XML', 'xts', 'XVector', 'yaml', 'zlibbioc', 'readxl',    'Gviz', 'normr', 'AnnotationHub', 'ggtree', 'rhdf5', 'rhdf5filters',    'BSgenome.Hsapiens.UCSC.hg38', 'BiocFileCache', 'ComplexHeatmap',    'DBI', 'DDRTree', 'DT', 'DelayedMatrixStats', 'GGally', 'GenomicTools.fileHandler',    'GetoptLong', 'GlobalOptions', 'HSMMSingleCell', 'MotifDb', 'TFBSTools',    'IRdisplay', 'IRkernel', 'Matrix', 'MatrixModels', 'RANN', 'RBGL',    'RJSONIO', 'RSQLite', 'RUnit', 'RVenn', 'RcppArmadillo', 'RcppEigen',    'Rtsne', 'SparseM', 'VGAM', 'ape', 'aplot', 'askpass', 'assertthat',    'backports', 'base64', 'base64enc', 'base64url', 'beachmat',    'beanplot', 'beeswarm', 'bit', 'bit64', 'blob', 'brio', 'broom',    'bslib', 'bsseq', 'caTools', 'cachem', 'callr', 'car', 'carData',    'circlize', 'classInt', 'clipr', 'clue', 'combinat', 'commonmark',    'corrplot', 'countrycode', 'cowplot', 'crosstalk', 'curl', 'dbplyr',    'desc', 'diffobj', 'digest', 'doParallel', 'doRNG', 'downloader',    'dplyr', 'e1071', 'echarts4r', 'edgeR', 'ellipsis', 'evaluate',    'fastICA', 'fastmap', 'fastmatch', 'fgsea', 'filelock', 'fontawesome',    'forcats', 'foreach', 'fs', 'generics', 'genomation', 'ggforce',    'ggfun', 'ggnetwork', 'ggplotify', 'ggpubr', 'ggraph', 'ggrepel',    'ggsci', 'ggsignif', 'gplots', 'graph', 'graphlayouts', 'gridBase',    'gridExtra', 'gridGraphics', 'highr', 'hms', 'htmltools', 'htmlwidgets',    'httpuv', 'httr', 'igraph', 'illuminaio', 'impute', 'interactiveDisplayBase',    'irlba', 'iterators', 'jquerylib', 'jsonlite', 'knitr', 'later',    'lazyeval', 'leidenbase', 'lme4', 'locfit', 'maptools', 'markdown',    'memoise', 'mime', 'minqa', 'mitch', 'multtest', 'network', 'nloptr',    'nor1mix', 'openssl', 'patchwork', 'pbdZMQ', 'pbkrtest', 'permute',    'pheatmap', 'pkgload', 'plogr', 'plotly', 'plotrix', 'png', 'polyclip',    'polynom', 'praise', 'preprocessCore', 'prettyunits', 'processx',    'progress', 'promises', 'proxy', 'ps', 'purrr', 'qlcMatrix',    'quadprog', 'quantreg', 'rappdirs', 'readr', 'rematch2', 'repr',    'reshape', 'rmarkdown', 'rngtools', 'rprojroot', 'rstatix', 'rstudioapi',    'rvest', 's2', 'sass', 'scatterpie', 'scrime', 'selectr', 'seqPattern',    'sf', 'shadowtext', 'shape', 'shiny', 'siggenes', 'slam', 'sna',    'snpStats', 'sourcetools', 'sp', 'sparseMatrixStats', 'sparsesvd',    'statnet.common', 'svglite', 'sys', 'testthat', 'tidygraph',    'tidyr', 'tidyselect', 'tidytree', 'tinytex', 'treeio', 'tweenr',    'tzdb', 'uchardet', 'units', 'uuid', 'vegan', 'viridis', 'vroom',    'waldo', 'webshot', 'wk', 'xfun', 'xml2', 'xtable', 'yulab.utils',    'xgboost', 'LiblineaR', 'scAnnotatR', 'udunits2', 'randomForest',    'megadepth'))"
+
+    R --no-echo --no-restore --no-save -e "devtools::install_github('kupietz/kableExtra')"
+    R --no-echo --no-restore --no-save -e "devtools::install_github('thackl/thacklr')"
+    R --no-echo --no-restore --no-save -e "devtools::install_github('thackl/gggenomes')"
+    R --no-echo --no-restore --no-save -e "devtools::install_github('cole-trapnell-lab/garnett')"
+    R --no-echo --no-restore --no-save -e "devtools::install_github('immunogenomics/presto')"
+    R --no-echo --no-restore --no-save -e "install.packages('https://cran.r-project.org/src/contrib/Archive/tiger/tiger_0.2.3.1.tar.gz', repos = NULL, type = 'source')"
+    R --no-echo --no-restore --no-save -e "devtools::install_github('BoevaLab/CHIPIN', build_vignettes = TRUE)"
+
+    echo session-timeout-minutes=0 >> /etc/rstudio/rsession.conf
+
+    /sbin/ldconfig -v
+    
+%runscript
+    $*
