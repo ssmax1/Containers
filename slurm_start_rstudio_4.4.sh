@@ -62,7 +62,7 @@ function get_port {
 
 
 
-RSHOME="/path/to/user/rstudio_session_1" # <- Change R dir "rstudio_session_2" to make isolated rsever sessions
+RSHOME="/path/to/user/rstudio_session_1" # <- Change R dir "rstudio_session_2" to make isolated rsever sessions 
 IMAGE_NAME=$(basename $IMAGE | sed 's#.simg\|.sif##' )
 RSTUDIO_HOME=${RSHOME}/${IMAGE_NAME}/session
 RSTUDIO_TMP=${RSHOME}/${IMAGE_NAME}/tmp
